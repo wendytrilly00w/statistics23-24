@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shapes</title>
+</head>
+<body>
+    <canvas id="myCanvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const context = canvas.getContext('2d');
+
+        // Draw a line
+        context.beginPath();
+        context.moveTo(50, 50);
+        context.lineTo(150, 50);
+        context.strokeStyle = 'blue';
+        context.lineWidth = 2;
+        context.stroke();
+
+        // Draw a circle
+        context.beginPath();
+        context.arc(150, 150, 50, 0, 2 * Math.PI);
+        context.fillStyle = 'green';
+        context.fill();
+        context.closePath();
+
+        // Draw a rectangle
+        context.fillStyle = 'orange';
+        context.fillRect(50, 200, 100, 50);
+
+        // Draw a point
+        context.fillStyle = 'red';
+        context.fillRect(200, 200, 5, 5);
+    </script>
+</body>
+</html>
+

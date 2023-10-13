@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cheatsheet JavaScript</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        pre {
+            background-color: #333;
+            color: #fff;
+            padding: 20px;
+            border: 1px solid #666;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+
+        strong {
+            color: #f0ad4e;
+        }
+
+        em {
+            color: #5bc0de;
+        }
+
+        span {
+            color: #5cb85c;
+        }
+    </style>
+</head>
+<body>
+    <pre>
+        <strong>// Array:</strong>
+        - <em>Loop (break/continue)</em>
+        for (let i = 0; i < array.length; i++) {
+          if (condition) break; <span>// Termina il loop anticipatamente</span>
+          if (condition) continue; <span>// Salta l'iterazione corrente</span>
+        }
+
+        - <em>Add/Remove/Get/Check the existence of an element</em>
+        array.push(element); <span>// Aggiunge un elemento alla fine</span>
+        array.pop(); <span>// Rimuove l'ultimo elemento</span>
+        array.unshift(element); <span>// Aggiunge un elemento all'inizio</span>
+        array.shift(); <span>// Rimuove il primo elemento</span>
+        element = array[index]; <span>// Accedi all'elemento tramite indice</span>
+        index = array.indexOf(element); <span>// Trova l'indice di un elemento</span>
+        exists = array.includes(element); <span>// Verifica l'esistenza di un elemento</span>
+
+        <strong>// Dictionary (Equivalent to JavaScript Object):</strong>
+        - <em>Loop (break/continue)</em>
+        for (let key in object) {
+          if (condition) break; <span>// Termina il loop anticipatamente</span>
+          if (condition) continue; <span>// Salta l'iterazione corrente</span>
+        }
+
+        - <em>Add/Remove/Get/Check the existence of an element</em>
+        object[key] = value; <span>// Aggiunge o aggiorna un elemento</span>
+        delete object[key]; <span>// Rimuove un elemento</span>
+        value = object[key]; <span>// Accedi all'elemento tramite chiave</span>
+        exists = key in object; <span>// Verifica l'esistenza di una chiave</span>
+
+        <strong>// HashSet (Simulated with objects or arrays):</strong>
+        - <em>Use objects or arrays to simulate a set.</em>
+        - <em>For uniqueness, maintain a dictionary with keys as unique values.</em>
+
+        <strong>// Queue (Simulated with arrays):</strong>
+        - <em>Enqueue: Push an element to the end of the array</em>
+        queue.push(element);
+        - <em>Dequeue: Remove an element from the front of the array</em>
+        element = queue.shift();
+
+        <strong>// Stack (Simulated with arrays):</strong>
+        - <em>Push: Push an element onto the stack</em>
+        stack.push(element);
+        - <em>Pop: Pop an element from the top of the stack</em>
+        element = stack.pop();
+
+        <strong>// Linked List (Custom implementation if needed):</strong>
+        - <em>Create a custom Linked List class with methods for adding, removing, getting, and checking elements.</em>
+    </pre>
+</body>
+</html>
