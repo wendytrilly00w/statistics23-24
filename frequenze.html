@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analisi file Excel</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    table, th, td {
+      border: 1px solid black;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <h1>Carica un file Excel (.xlsx)</h1>
+  <input type="file" id="fileInput" accept=".xlsx">
+  <div id="output"></div>
+  <div id="frequencyTables">
+    <h2>Analisi delle Variabili</h2>
+    <div id="frequencyHardWorker"></div>
+    <div id="frequencyAge"></div>
+    <div id="frequencyProgrammingLanguages"></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
+  <script>
+    var ExcelToJSON = function() {
+
+      this.parseExcel = function(file) {
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+          var data = e.target.result;
+          var workbook = XLSX.read(data, {
+            type: 'binary'
+          });
+
+          workbook.SheetNames.forEach(function(sheetName) {
+            var XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+            displayDataInTable(XL_row_object);
+            calculateFrequency(XL_row_object, "Hard Worker (0-5)", "frequencyHardWorker");
+            calculateFrequency(XL_row_object, "Age", "frequencyAge");
+            calculateFrequency(XL_row_object, "Programming Languages", "frequencyProgrammingLanguages");
+          });
+
+        };
+
+        reader.onerror = function(ex) {
+          console.log(ex);
+        };
+
+        reader.readAsBinaryString(file);
+      };
+    };
+
+    function displayDataInTable(data) {
+      var table = document.createElement('table');
+      var thead = table.createTHead();
+      var tbody = table.createTBody();
+
+      var headerRow = thead.insertRow(0);
+      for (var key in data[0]) {
+        var th = document.createElement('th');
+        th.innerHTML = key;
+        headerRow.appendChild(th);
+      }
+
+      data.forEach(function (row) {
+        var newRow = tbody.insertRow();
+        for (var key in row) {
+          var cell = newRow.insertCell();
+          cell.innerHTML = row[key];
+        }
+      });
+
+      document.getElementById('output').innerHTML = '';
+      document.getElementById('output').appendChild(table);
+    }
+
+    function calculateFrequency(data, variableName, outputElementId) {
+      var frequencies = {};
+      var totalEntries = data.length;
+
+      data.forEach(function (entry) {
+        var value = entry[variableName];
+
+        if (value in frequencies) {
+          frequencies[value]++;
+        } else {
+          frequencies[value] = 1;
+        }
+      });
+
+      var result = '<h3>Analisi della variabile: ' + variableName + '</h3>';
+      result += '<table>';
+      result += '<tr><th>Valore</th><th>Frequenza Assoluta</th><th>Frequenza Relativa</th><th>Percentuale</th></tr>';
+
+      for (var value in frequencies) {
+        var frequency = frequencies[value];
+        var relativeFrequency = frequency / totalEntries;
+        var percentage = (relativeFrequency * 100).toFixed(2);
+
+        result += '<tr><td>' + value + '</td><td>' + frequency + '</td><td>' + relativeFrequency.toFixed(2) + '</td><td>' + percentage + '%</td></tr>';
+      }
+
+      result += '</table>';
+
+      document.getElementById(outputElementId).innerHTML = result;
+    }
+
+    // Aggiungi un listener all'input file per avviare l'analisi del file quando viene selezionato
+    document.getElementById('fileInput').addEventListener('change', function (e) {
+      var file = e.target.files[0];
+      if (file) {
+        var excelParser = new ExcelToJSON();
+        excelParser.parseExcel(file);
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
