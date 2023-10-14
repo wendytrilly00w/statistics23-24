@@ -3,34 +3,13 @@
 <head>
   <title>Analisi file Excel</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f0f0f0;
-      margin: 0;
-      padding: 0;
-    }
-
-    h1 {
-      text-align: center;
-      padding: 20px;
-    }
-
-    #output, #frequencyTables {
-      margin: 20px auto;
-      padding: 20px;
-      background-color: #fff;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-      width: 80%;
-    }
-
     table {
       border-collapse: collapse;
       width: 100%;
-      margin-top: 20px;
     }
 
     table, th, td {
-      border: 1px solid #ddd;
+      border: 1px solid black;
     }
 
     th, td {
@@ -38,12 +17,12 @@
       text-align: left;
     }
 
-    th {
-      background-color: #f2f2f2;
+    .frequency-table {
+      margin-top: 20px;
     }
 
-    h2 {
-      margin-top: 20px;
+    h3 {
+      margin: 10px 0;
     }
   </style>
 </head>
@@ -51,17 +30,16 @@
   <h1>Carica un file Excel (.xlsx)</h1>
   <input type="file" id="fileInput" accept=".xlsx">
   <div id="output"></div>
-  <div id="frequencyTables">
-    <h2>Analisi delle Variabili</h2>
-    <div id="frequencyHardWorker"></div>
-    <div id="frequencyAge"></div>
-    <div id="frequencyBackgroundDegree"></div>
-  </div>
+  <div class="frequency-table" id="frequencyHardWorker"></div>
+  <div class="frequency-table" id="frequencyAge"></div>
+  <div class="frequency-table" id="frequencyBackgroundDegree"></div>
+  <div class="frequency-table" id="jointDistributionHardWorkerAge"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
   <script>
     var ExcelToJSON = function() {
+
       this.parseExcel = function(file) {
         var reader = new FileReader();
 
@@ -77,7 +55,9 @@
             calculateFrequency(XL_row_object, "Hard Worker (0-5)", "frequencyHardWorker");
             calculateFrequency(XL_row_object, "Age", "frequencyAge");
             calculateFrequency(XL_row_object, "Background (degree)", "frequencyBackgroundDegree");
+            calculateJointDistribution(XL_row_object, "Hard Worker (0-5)", "Age", "jointDistributionHardWorkerAge");
           });
+
         };
 
         reader.onerror = function(ex) {
@@ -143,6 +123,39 @@
       document.getElementById(outputElementId).innerHTML = result;
     }
 
+    function calculateJointDistribution(data, variable1, variable2, outputElementId) {
+      var jointDistribution = {};
+
+      data.forEach(function (entry) {
+        var value1 = entry[variable1];
+        var value2 = entry[variable2];
+
+        var key = value1 + ' | ' + value2;
+
+        if (jointDistribution[key]) {
+          jointDistribution[key]++;
+        } else {
+          jointDistribution[key] = 1;
+        }
+      });
+
+      var result = '<h3>Distribuzione Congiunta tra ' + variable1 + ' e ' + variable2 + '</h3>';
+      result += '<table>';
+      result += '<tr><th>Valore</th><th>Frequenza Congiunta</th><th>Frequenza Relativa Congiunta</th><th>Percentuale Congiunta</th></tr>';
+
+      for (var key in jointDistribution) {
+        var frequency = jointDistribution[key];
+        var relativeFrequency = frequency / data.length;
+        var percentage = (relativeFrequency * 100).toFixed(2);
+
+        result += '<tr><td>' + key + '</td><td>' + frequency + '</td><td>' + relativeFrequency.toFixed(2) + '</td><td>' + percentage + '%</td></tr>';
+      }
+
+      result += '</table>';
+
+      document.getElementById(outputElementId).innerHTML = result;
+    }
+
     // Aggiungi un listener all'input file per avviare l'analisi del file quando viene selezionato
     document.getElementById('fileInput').addEventListener('change', function (e) {
       var file = e.target.files[0];
@@ -154,6 +167,7 @@
   </script>
 </body>
 </html>
+
 
 
 
