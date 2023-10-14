@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Random Distribution</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body>
+    <h1>Random Distribution</h1>
+    <canvas id="myChart" width="400" height="200"></canvas>
+
+    <script>
+        function generateUniformRandomNumbers(N) {
+            const randomNumbers = [];
+            for (let i = 0; i < N; i++) {
+                randomNumbers.push(Math.random()); // Generates random numbers between 0 and 1
+            }
+            return randomNumbers;
+        }
+
+        function determineDistribution(randomNumbers, k) {
+            const intervalCounts = new Array(k).fill(0);
+            randomNumbers.forEach((num) => {
+                const interval = Math.floor(num * k);
+                intervalCounts[interval]++;
+            });
+            return intervalCounts;
+        }
+
+        function displayDistribution(N, k) {
+            const randomNumbers = generateUniformRandomNumbers(N);
+            const intervalCounts = determineDistribution(randomNumbers, k);
+
+            const intervalLabels = [];
+            for (let i = 0; i < k; i++) {
+                const lowerBound = (i / k).toFixed(2);
+                const upperBound = ((i + 1) / k).toFixed(2);
+                intervalLabels.push(`[${lowerBound} - ${upperBound}]`);
+            }
+
+            const ctx = document.getElementById('myChart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: intervalLabels,
+                    datasets: [{
+                        label: 'Frequency',
+                        data: intervalCounts,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        const N = 10000; // Number of random variates
+        const k = 20; // Number of interval classes
+        displayDistribution(N, k);
+    </script>
+</body>
+</html>
