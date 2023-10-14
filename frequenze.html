@@ -3,18 +3,47 @@
 <head>
   <title>Analisi file Excel</title>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+    }
+
+    #output, #frequencyTables {
+      margin: 20px auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      width: 80%;
+    }
+
     table {
       border-collapse: collapse;
       width: 100%;
+      margin-top: 20px;
     }
 
     table, th, td {
-      border: 1px solid black;
+      border: 1px solid #ddd;
     }
 
     th, td {
       padding: 8px;
       text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+    }
+
+    h2 {
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -26,14 +55,13 @@
     <h2>Analisi delle Variabili</h2>
     <div id="frequencyHardWorker"></div>
     <div id="frequencyAge"></div>
-    <div id="frequencyProgrammingLanguages"></div>
+    <div id="frequencyBackgroundDegree"></div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/jszip.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.8.0/xlsx.js"></script>
   <script>
     var ExcelToJSON = function() {
-
       this.parseExcel = function(file) {
         var reader = new FileReader();
 
@@ -48,9 +76,8 @@
             displayDataInTable(XL_row_object);
             calculateFrequency(XL_row_object, "Hard Worker (0-5)", "frequencyHardWorker");
             calculateFrequency(XL_row_object, "Age", "frequencyAge");
-            calculateFrequency(XL_row_object, "Programming Languages", "frequencyProgrammingLanguages");
+            calculateFrequency(XL_row_object, "Background (degree)", "frequencyBackgroundDegree");
           });
-
         };
 
         reader.onerror = function(ex) {
@@ -127,8 +154,6 @@
   </script>
 </body>
 </html>
-
-
 
 
 
