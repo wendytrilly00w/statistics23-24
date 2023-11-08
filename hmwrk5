@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tracciamento degli Attacchi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+            margin: 20px 0;
+            border: 2px solid #000;
+            border-radius: 10px;
+        }
+
+        .axis-labels {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .axis-labels-x {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .axis-labels-y {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-left: 10px;
+        }
+
+        .statistics-label {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <label for="numServers">Numero di Server (M):</label>
+        <input type="number" id="numServers" min="1" value="100">
+        <label for="numIntervals">Numero di Suddivisioni (N):</label>
+        <input type="number" id="numIntervals" min="1" value="100">
+        <label for="period">Periodo di tempo (T in giorni):</label>
+        <input type="number" id="period" min="1" value="365">
+        <label for="lambda">Probabilità di Attacco (λ):</label>
+        <input type="number" id="lambda" min="0" step="0.01" value="0.1">
+        <button id="generateChart">Genera Grafico</button>
+    </div>
+
+    <div class="axis-labels">
+        <canvas id="attackChart"></canvas>
+        <div class="axis-labels-x">
+            <div>Server</div>
+        </div>
+    </div>
+
+    <div id="probabilityMessage"></div>
+
+    <div class="statistics-label">Server</div>
+
+    <script>
+        class AttackTracker {
+            constructor() {
+                this.canvas = document.getElementById('attackChart');
+                this.ctx = this.canvas.getContext('2d');
+                this.canvas.width = 1500;
+                this.canvas.height = 400;
+                this.offset = -50;
+            }
+
+            generateGrid(width, height, divX, divY) {
+                this.ctx.strokeStyle = "grey";
+                this.ctx.lineWidth = 1;
+                let currentX = 0;
+
+                for (let i = 0; i < width / divX; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(currentX, height);
+                    this.ctx.lineTo(currentX, 0);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                    currentX += divX;
+                }
+
+                let currentY = 0;
+                for (let i = 0; i < height / divY; i++) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, currentY);
+                    this.ctx.lineTo(width, currentY);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                    currentY += divY;
+                }
+            }
+
+            makeTrajectories(M, N, lambda) {
+                const data = [];
+                for (let i = 0; i < M; i++) {
+                    const serverAttacks = [];
+                    let attackCount = 0;
+                    for (let j = 0; j < N; j++) {
+                        if (Math.random() < lambda) {
+                            attackCount++;
+                        }
+                        serverAttacks.push(attackCount);
+                    }
+                    data.push(serverAttacks);
+                }
+                return data;
+            }
+
+            generateChart(M, N, T, lambda) {
+                this.generateGrid(this.canvas.width, this.canvas.height, 20, 20);
+                const data = this.makeTrajectories(M, N, lambda);
+                const colors = this.generateRandomColors(M);
+                for (let i = 0; i < M; i++) {
+                    const serverAttacks = data[i];
+
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, this.canvas.height);
+                    for (let j = 0; j < N; j++) {
+                        const x = (j * this.canvas.width) / (N - 1);
+                        const y = (this.canvas.height - (serverAttacks[j] / N) * this.canvas.height) + this.offset;
+                        this.ctx.lineTo(x, y);
+                        this.ctx.moveTo(x, y);
+                        this.ctx.arc(x, y, 2, 0, 2 * Math.PI);
+                        this.ctx.fill();
+                        this.ctx.closePath();
+                    }
+                    this.ctx.strokeStyle = colors[i];
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                }
+            }
+
+            generateRandomColors(count) {
+                const colors = [];
+                for (let i = 0; i < count; i++) {
+                    const color = `rgba(${Math.random() * 255},${Math.random() * 255},${Math.random() * 255},1)`;
+                    colors.push(color);
+                }
+                return colors;
+            }
+
+            showProbabilityMessage(lambda, T, N) {
+                const probability = lambda * T / N;
+                const message = `La probabilità (λ) è calcolata come λ * T / N. La probabilità * T / N è ${probability.toFixed(4)}`;
+                document.getElementById('probabilityMessage').textContent = message;
+            }
+
+            generateHistogram(M, N, lambda) {
+                const data = this.makeTrajectories(M, N, lambda);
+                const colors = this.generateRandomColors(N);
+                const barWidth = this.canvas.width / N;
+                const attackFrequencies = new Array(N).fill(0);
+
+                for (let i = 0; i < M; i++) {
+                    const serverAttacks = data[i];
+                    for (let j = 0; j < N; j++) {
+                        attackFrequencies[j] += serverAttacks[j];
+                    }
+                }
+
+                const maxFrequency = Math.max(...attackFrequencies);
+
+                for (let i = 0; i < N; i++) {
+                    const barHeight = (attackFrequencies[i] / maxFrequency) * (this.canvas.height - 20);
+                    const x = i * barWidth;
+                    const y = this.canvas.height - barHeight;
+                    this.ctx.fillStyle = colors[i];
+                    this.ctx.fillRect(x, y, barWidth, barHeight);
+                }
+            }
+
+            updateChartOnChange() {
+                const numServersInput = document.getElementById('numServers');
+                const numIntervalsInput = document.getElementById('numIntervals');
+                const periodInput = document.getElementById('period');
+                const lambdaInput = document.getElementById('lambda');
+
+                numServersInput.addEventListener('input', () => {
+                    this.generateChart();
+                    this.generateHistogram();
+                });
+
+                numIntervalsInput.addEventListener('input', () => {
+                    this.generateChart();
+                    this.generateHistogram();
+                });
+
+                periodInput.addEventListener('input', () => {
+                    this.generateChart();
+                    this.generateHistogram();
+                });
+
+                lambdaInput.addEventListener('input', () => {
+                    this.generateChart();
+                    this.generateHistogram();
+                });
+            }
+        }
+
+        const attackTracker = new AttackTracker();
+
+        window.onload = function () {
+            attackTracker.updateChartOnChange();
+            attackTracker.generateChart();
+            attackTracker.generateHistogram();
+        };
+    </script>
+</body>
+</html>
