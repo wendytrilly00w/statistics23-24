@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulazione di Score di Sicurezza</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Simulazione di Score di Sicurezza</h1>
+
+    <label for="M">Numero di attacchi (M):</label>
+    <input type="number" id="M" value="5"><br>
+
+    <label for="N">Numero di sistemi (N):</label>
+    <input type="number" id="N" value="10"><br>
+
+    <label for="securityScore">Security Score :</label>
+    <input type="number" id="securityScore" value="5"><br>
+
+    <label for="scarto">Scarto:</label>
+    <input type="number" id="scarto" value="-50"><br>
+
+    <p id="probabilitaP"></p>
+
+    <button onclick="simulateAndDisplay()">Simula</button>
+
+    <canvas id="graph" width="1700" height="1000"></canvas>
+
+    <script>
+        class TrajectorySimulator {
+            constructor(attacks, systems, securityScore, deviation, canvasId) {
+                this.attacks = attacks;
+                this.systems = systems;
+                this.securityScore = securityScore;
+                this.deviation = deviation;
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext("2d");
+                this.trajectory = [];
+                this.discardedSystems = 0;
+                this.unit = 0;
+                this.unitY = 0;
+            }
+
+            generateGrid(divX, divY) {
+                this.ctx.strokeStyle = "grey";
+                this.ctx.lineWidth = 1;
+
+                if (this.attacks > 20) {
+                    this.unit = this.canvas.width / this.attacks;
+                    divX = this.canvas.width / 20;
+                } else {
+                    divX = this.canvas.width / this.attacks;
+                    this.unit = divX;
+                }
+
+                for (let i = 0; i <= this.canvas.width; i += divX) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i, this.canvas.height);
+                    this.ctx.lineTo(i, 0);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                    this.ctx.fillText(Math.round(i / this.unit).toString(), i, this.canvas.height - 4);
+                }
+
+                for (let i = 0; i <= this.canvas.height; i += this.canvas.height / divY) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i);
+                    this.ctx.lineTo(this.canvas.width, i);
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                    this.ctx.fillText(parseInt((this.canvas.height / 2 - i) / divY).toString(), 5, i);
+                }
+            }
+
+            makeTrajectories(probability) {
+                const data = new Array(this.systems).fill().map(() => new Array(this.attacks).fill(0));
+
+                for (let i = 0; i < this.systems; i++) {
+                    for (let j = 1; j < this.attacks; j++) {
+                        if (Math.random() < probability) {
+                            data[i][j] = data[i][j - 1] - 1; // System is penetrated
+                        } else {
+                            data[i][j] = data[i][j - 1] + 1; // System is successfully shielded
+                        }
+                    }
+                }
+
+                return data;
+            }
+
+            getRandomColor() {
+                const letters = "0123456789ABCDEF";
+                let color = "#";
+                for (let i = 0; i < 6; i++) {
+                    color += letters[Math.floor(Math.random() * 16)];
+                }
+                return color;
+            }
+
+            sistemiScartati() {
+                let scartati = [];
+
+                for (let i = 0; i < this.systems; i++) {
+                    let boh = true;
+
+                    for (let j = 0; j < this.attacks; j++) {
+                        if (this.trajectory[i][j] <= this.deviation) {
+                            scartati.push(-1);
+                            boh = false;
+                            break;
+                        }
+
+                        if (this.trajectory[i][j] >= this.securityScore) {
+                            scartati.push(1);
+                            boh = false;
+                            break;
+                        }
+                    }
+
+                    if (boh) {
+                        scartati.push(0);
+                    }
+                }
+
+                return scartati;
+            }
+
+            trovaValoreMassimo() {
+                let massimo = Number.NEGATIVE_INFINITY;
+
+                for (let riga = 0; riga < this.trajectory.length; riga++) {
+                    for (let colonna = 0; colonna < this.trajectory[riga].length; colonna++) {
+                        if (Math.abs(this.trajectory[riga][colonna]) > massimo) {
+                            massimo = Math.abs(this.trajectory[riga][colonna]);
+                        }
+                    }
+                }
+
+                return massimo;
+            }
+
+            contaMenoUno(array) {
+                const menoUnoArray = array.filter(elemento => elemento === -1);
+                return menoUnoArray.length;
+            }
+
+            simulate() {
+                const probability = 0.5;
+                document.getElementById("probabilitaP").innerText = "Probabilità P fissata:" + probability;
+
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.generateGrid(20, 20);
+
+                // Initialize trajectory
+                this.trajectory = this.makeTrajectories(probability);
+
+                if (this.attacks > 20) {
+                    this.unit = this.canvas.width / this.attacks;
+                } else {
+                    this.unit = this.canvas.width / this.attacks;
+                }
+
+                const max = this.trovaValoreMassimo();
+
+                if (max > 10) {
+                    this.unitY = this.canvas.height / 2 / max;
+                } else {
+                    this.unitY = this.canvas.height / 2 / max;
+                }
+
+                this.ctx.strokeStyle = 'green';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.canvas.height / 2 - (this.securityScore * this.unitY));
+                this.ctx.lineTo(this.canvas.width, this.canvas.height / 2 - (this.securityScore * this.unitY));
+                this.ctx.stroke();
+                this.ctx.closePath();
+
+                this.ctx.strokeStyle = 'red';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.canvas.height / 2 - (this.deviation * this.unitY));
+                this.ctx.lineTo(this.canvas.width, this.canvas.height / 2 - (this.deviation * this.unitY));
+                this.ctx.stroke();
+                this.ctx.closePath();
+
+                console.log(this.trajectory);
+
+                // Simulate and display trajectories
+                for (let sist = 0; sist < this.systems; sist++) {
+                    this.ctx.moveTo(0, this.canvas.height / 2);
+                    this.ctx.beginPath();
+                    this.ctx.strokeStyle = this.getRandomColor();
+                    this.ctx.lineWidth = 2;
+
+                    for (let x = 0; x < this.attacks; x++) {
+                        const y = this.trajectory[sist][x] * this.unitY;
+                        this.ctx.lineTo(x * this.unit, this.canvas.height / 2 - y);
+                    }
+
+                    this.ctx.stroke();
+                    this.ctx.closePath();
+                }
+
+                const scartati = this.sistemiScartati();
+                console.log("Numero di sistemi scartati:", this.contaMenoUno(scartati));
+                document.getElementById("probabilitaP").innerText += " - Sistemi scartati: " + this.contaMenoUno(scartati);
+                this.discardedSystems = this.contaMenoUno(scartati);
+            }
+        }
+
+        class HTMLManager {
+            constructor(probabilityElementId) {
+                this.probabilityElement = document.getElementById(probabilityElementId);
+            }
+
+            updateProbability(probability, discardedSystems) {
+                this.probabilityElement.innerText = `Probabilità P fissata: ${probability} - Sistemi scartati: ${discardedSystems}`;
+            }
+        }
+
+        function simulateAndDisplay() {
+            const attacchi = parseInt(document.getElementById("M").value);
+            const sistemi = parseInt(document.getElementById("N").value);
+            const securityScore = parseInt(document.getElementById("securityScore").value);
+            const scarto = parseInt(document.getElementById("scarto").value);
+
+            const simulation = new TrajectorySimulator(attacchi, sistemi, securityScore, scarto, "graph");
+            const htmlManager = new HTMLManager("probabilitaP");
+
+            simulation.simulate();
+            htmlManager.updateProbability(0.5, simulation.discardedSystems);
+        }
+    </script>
+</body>
+
+</html>
